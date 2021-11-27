@@ -12,6 +12,12 @@ RGBA = Tuple[float, float, float, float]
 
 
 class RandomProjection(object):
+    """
+    Starting from a 3D STL-versioned file, it creates a random 2D projection of the figure from an arbitrary PoV.
+    It receives the hardcoded illumination parameters related to the azimuth and altitude values (int values 0-255).
+    Furthermore, it receives the bright and dark surface vectors (RGBA vectors).
+    """
+
     def __init__(
             self,
             azimuth: int, altitude: int,
