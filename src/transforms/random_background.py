@@ -22,6 +22,8 @@ class RandomBackground(object):
     It extracts the piece from an image with an alpha channel, separating the foreground and the background.
     Then, it merges piece and background according to the alpha channels of the original image.
     The returned image loses the alpha channel, becoming a RGB image.
+
+    NPArray -> NPArray
     """
 
     def __init__(
