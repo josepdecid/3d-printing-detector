@@ -44,7 +44,7 @@ class RandomBackground(object):
         assert 0 <= background_img_prob <= 1, 'The cropping percentage must be in range [0, 1].'
         self.__background_img_prob = background_img_prob
 
-    def __call__(self, img):
+    def __call__(self, img: np.ndarray) -> np.ndarray:
         # Select a random background
         if np.random.random() < self.__background_img_prob:
             random_idx = np.random.randint(0, len(self.__background_files))

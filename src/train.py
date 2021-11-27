@@ -13,6 +13,8 @@ from torchvision.transforms import Compose, ToTensor, Normalize
 from datasets.Piece3DPrintDataset import Piece3DPrintDataset
 from src.utils import get_cnn_model
 from transforms.random_background import RandomBackground
+from transforms.random_noise import RandomNoise
+from transforms.random_offset_scaling import RandomOffsetScaling
 from transforms.random_projection import RandomProjection
 
 
@@ -21,7 +23,7 @@ def main(cfg: DictConfig) -> None:
     load_dotenv()
 
     dataset = Piece3DPrintDataset(os.environ.get('DATASET_PATH'), Compose([
-        # Project 3D model into a random-oriented 2D image
+        # Project 3D model into a random-oriented 2D image.
         RandomProjection(
             azimuth=cfg.illumination.azimuth,
             altitude=cfg.illumination.altitude,
@@ -29,13 +31,20 @@ def main(cfg: DictConfig) -> None:
             brightest_lit_surface=cfg.illumination.brightest_lit_surface,
         ),
 
-        # Add a randomized background with different cropping sizes
+        # Apply random transformations to the image to scale, crop and offset.
+        RandomOffsetScaling(),
+
+        # Add a randomized background with different cropping sizes.
         RandomBackground(
             search_terms=cfg.backgrounds.search_terms,
             download_bg=cfg.backgrounds.download,
             images_per_term=cfg.backgrounds.images_per_term
         ),
 
+        # Add perturbations with occlusions and random noise to provide robustness to the model.
+        RandomNoise(),
+
+        # Convert the image as a Tensor Normalize to [-1, 1] range to input it to the NN model.
         ToTensor(),
         Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ]))
@@ -128,16 +137,16 @@ def main(cfg: DictConfig) -> None:
         if phase == 'val':
             val_acc_history.append(epoch_acc)
 
-
     print()
 
-    #time_elapsed = time.time() - since
-    #print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
+    # time_elapsed = time.time() - since
+    # print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
     print('Best val Acc: {:4f}'.format(best_acc))
 
     # load best model weights
     cnn_model.load_state_dict(best_model_wts)
     return cnn_model, val_acc_history
+
 
 if __name__ == '__main__':
     main()
