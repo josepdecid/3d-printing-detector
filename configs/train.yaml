@@ -9,9 +9,9 @@ illumination:
     - 0.0
     - 1.0
   brightest_lit_surface:
-    - 0.2
-    - 0.0
-    - 0.0
+    - 0.7
+    - 0.7
+    - 1.0
     - 1.0
 
 backgrounds:
