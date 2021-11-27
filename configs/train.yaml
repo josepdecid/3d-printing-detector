@@ -15,7 +15,7 @@ illumination:
     - 1.0
 
 backgrounds:
-  download: True
+  download: False
   images_per_term: 2
   search_terms:
     - office
