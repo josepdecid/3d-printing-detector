@@ -13,13 +13,19 @@ class Piece3DPrintDataset(Dataset):
         self.__transform = transform
 
         self.__data = self.__make_dataset()
+        self.__idx_from_class = {class_name: idx for idx, class_name in enumerate(self.__data)}
 
     def __len__(self):
         return len(self.__data)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, dict]:
-        stl_mesh = mesh.Mesh.from_file(self.__data[idx])
-        return self.__transform(stl_mesh)
+        class_name = self.__data[idx]
+        stl_mesh = mesh.Mesh.from_file(class_name)
+
+        x = self.__transform(stl_mesh)
+        y = self.__idx_from_class[class_name]
+
+        return x, y
 
     def __make_dataset(self) -> List[str]:
         return sorted(glob(os.path.join(self.__root, '*.stl')))
