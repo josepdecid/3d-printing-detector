@@ -37,7 +37,7 @@ def main(cfg: DictConfig) -> None:
 
     dataloader = DataLoader(dataset, 1)
 
-    for img in dataloader:
+    for img, label in dataloader:
         plt.imshow(img[0, :, :, :].permute(1, 2, 0).numpy())
         plt.show()
 

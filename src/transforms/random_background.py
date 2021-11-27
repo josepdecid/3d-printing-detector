@@ -24,10 +24,14 @@ class RandomBackground(object):
     The returned image loses the alpha channel, becoming a RGB image.
     """
 
-    def __init__(self,
-                 search_terms: List[str], images_per_term: int = 20,
-                 backgrounds_folder: str = '.backgrounds', download_bg: bool = False,
-                 min_cropping_factor: int = 0.25, background_img_prob: int = 0.9):
+    def __init__(
+            self,
+            search_terms: List[str], images_per_term: int = 20,
+            backgrounds_folder: str = None, download_bg: bool = False,
+            min_cropping_factor: int = 0.25, background_img_prob: int = 0.9
+    ):
+        if backgrounds_folder is None:
+            backgrounds_folder = os.environ.get('BACKGROUNDS_PATH')
 
         self.__fetch_background_images(backgrounds_folder, download_bg, search_terms, images_per_term)
         self.__background_files = glob(os.path.join(backgrounds_folder, '*', '*'))

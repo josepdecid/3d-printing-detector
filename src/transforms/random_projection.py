@@ -1,3 +1,4 @@
+import math
 from typing import Tuple
 
 import numpy as np
@@ -12,9 +13,11 @@ RGBA = Tuple[float, float, float, float]
 
 
 class RandomProjection(object):
-    def __init__(self,
-                 azimuth: int, altitude: int,
-                 darkest_shadow_surface: RGBA, brightest_lit_surface: RGBA):
+    def __init__(
+            self,
+            azimuth: int, altitude: int,
+            darkest_shadow_surface: RGBA, brightest_lit_surface: RGBA
+    ):
         self.__azimuth = azimuth
         self.__altitude = altitude
 
@@ -22,6 +25,10 @@ class RandomProjection(object):
         self.__lt = np.array(brightest_lit_surface)
 
     def __call__(self, mesh: Mesh):
+        random_rotation_vectors = 2 * (np.random.rand(3) - 0.5)
+        random_rotation_angle = float(np.radians(360 * np.random.rand()))
+        mesh.rotate(random_rotation_vectors, random_rotation_angle)
+
         poly_mesh = self.__create_illumination(mesh)
         return RandomProjection.__plot_to_array_data(mesh, poly_mesh)
 
