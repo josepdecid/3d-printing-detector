@@ -1,4 +1,3 @@
-import math
 from typing import Tuple
 
 import numpy as np
@@ -24,13 +23,15 @@ class RandomProjection(object):
         self.__dk = np.array(darkest_shadow_surface)
         self.__lt = np.array(brightest_lit_surface)
 
-    def __call__(self, mesh: Mesh):
+    def __call__(self, mesh: Mesh) -> np.ndarray:
         random_rotation_vectors = 2 * (np.random.rand(3) - 0.5)
         random_rotation_angle = float(np.radians(360 * np.random.rand()))
         mesh.rotate(random_rotation_vectors, random_rotation_angle)
 
         poly_mesh = self.__create_illumination(mesh)
-        return RandomProjection.__plot_to_array_data(mesh, poly_mesh)
+        array_img = RandomProjection.__plot_to_array_data(mesh, poly_mesh)
+
+        return array_img
 
     def __create_illumination(self, mesh: Mesh) -> Poly3DCollection:
         def shade(s):
@@ -47,16 +48,17 @@ class RandomProjection(object):
         return poly_mesh
 
     @staticmethod
-    def __plot_to_array_data(mesh: Mesh, poly_mesh: Poly3DCollection):
+    def __plot_to_array_data(mesh: Mesh, poly_mesh: Poly3DCollection) -> np.ndarray:
         figure = plt.figure()
         axes = mplot3d.Axes3D(figure)
         axes.add_collection3d(poly_mesh)
 
-        pts = mesh.points.reshape(-1, 3)
-        ptp = max(np.ptp(pts, 0)) / 2
-        ctrs = [(min(pts[:, i]) + max(pts[:, i])) / 2 for i in range(3)]
-        lims = [[ctrs[i] - ptp, ctrs[i] + ptp] for i in range(3)]
-        axes.auto_scale_xyz(*lims)
+        points = mesh.points.reshape(-1, 3)
+        points_top = max(np.ptp(points, 0)) / 2
+
+        controls = [(min(points[:, i]) + max(points[:, i])) / 2 for i in range(3)]
+        limits = [[controls[i] - points_top, controls[i] + points_top] for i in range(3)]
+        axes.auto_scale_xyz(*limits)
         axes.axis('off')
 
         np_img = mplfig_to_npimage(figure)
