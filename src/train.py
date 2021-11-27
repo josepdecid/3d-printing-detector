@@ -12,7 +12,7 @@ from transforms.random_background import RandomBackground
 from transforms.random_projection import RandomProjection
 
 
-@hydra.main(config_path='configs', config_name='train')
+@hydra.main(config_path=os.path.join('..', 'configs'), config_name='train')
 def main(cfg: DictConfig) -> None:
     load_dotenv()
 
