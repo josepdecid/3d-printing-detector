@@ -50,7 +50,7 @@ def main(cfg: DictConfig) -> None:
     ]))
     dataloader = DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True)
 
-    device = torch.device('gpu' if torch.cuda.is_available() and cfg.use_gpu else 'cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() and cfg.use_gpu else 'cpu')
     model = models.resnet18(pretrained=True)
     print(f'Using pre-trained {model.__class__.__name__} from ImageNet.')
 
@@ -79,6 +79,9 @@ def main(cfg: DictConfig) -> None:
         loss_values = []
 
         for batch_idx, (images, labels) in enumerate(dataloader):
+            images = images.to(device)
+            labels = labels.to(device)
+
             logits = model(images)
 
             loss = criterion(logits, labels)
