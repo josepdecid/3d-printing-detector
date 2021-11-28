@@ -13,6 +13,7 @@ from datasets.Piece3DPrintDataset import Piece3DPrintDataset
 from transforms.random_background import RandomBackground
 from transforms.random_noise import RandomNoise
 from transforms.random_offset_scaling import RandomOffsetScalingAndPadding
+from transforms.random_projection import RandomProjection
 from utils import set_seeds
 
 
@@ -23,12 +24,7 @@ def main(cfg: DictConfig) -> None:
 
     dataset = Piece3DPrintDataset(os.environ.get('DATASET_PATH'), Compose([
         # Project 3D model into a random-oriented 2D image.
-        # RandomProjection(
-        #     azimuth=cfg.illumination.azimuth,
-        #     altitude=cfg.illumination.altitude,
-        #     darkest_shadow_surface=cfg.illumination.darkest_shadow_surface,
-        #     brightest_lit_surface=cfg.illumination.brightest_lit_surface,
-        # ),
+        RandomProjection(),
 
         # Apply random transformations to the image to scale, crop and offset.
         RandomOffsetScalingAndPadding(target_size=(

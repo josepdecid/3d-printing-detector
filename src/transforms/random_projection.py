@@ -8,51 +8,37 @@ from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from stl.mesh import Mesh
 
-from transforms._automatic import generate_random_brightness
-
-RGBA = Tuple[float, float, float, float]
-
 
 class RandomProjection(object):
     """
     Starting from a 3D STL-versioned file, it creates a random 2D projection of the figure from an arbitrary PoV.
-    It receives the hardcoded illumination parameters related to the azimuth and altitude values (int values 0-255).
-    Furthermore, it receives the bright and dark surface vectors (RGBA vectors).
+    It also randomizes illumination parameters related to the azimuth and altitude values (int values 0-255).
+    And it does the same for the bright and dark surface vectors (RGBA vectors).
 
     STLMesh -> NPArray
     """
 
-    def __init__(
-            self,
-            azimuth: int, altitude: int,
-            darkest_shadow_surface: RGBA, brightest_lit_surface: RGBA
-    ):
-        self.__dk = np.array(darkest_shadow_surface)
-        self.__lt = np.array(brightest_lit_surface)
-
-    def __call__(self, mesh: Mesh, class_name: str) -> np.ndarray:
+    def __call__(self, mesh: Mesh) -> np.ndarray:
         random_rotation_vectors = 2 * (np.random.rand(3) - 0.5)
         random_rotation_angle = float(np.radians(360 * np.random.rand()))
         mesh.rotate(random_rotation_vectors, random_rotation_angle)
 
-        poly_mesh = self.__create_illumination(mesh, class_name)
+        poly_mesh = RandomProjection.__create_illumination(mesh)
         array_img = RandomProjection.__plot_to_array_data(mesh, poly_mesh)
 
         return array_img
 
-    def __create_illumination(self, mesh: Mesh, class_name: str) -> Poly3DCollection:
-        self.__lt, self.__dk = generate_random_brightness(class_name)
-        self.__azimuth = np.random.rand()
-        self.__altitude = np.random.rand()
-
-        def shade(s):
-            return (self.__lt - self.__dk) * s + self.__dk
+    @staticmethod
+    def __create_illumination(mesh: Mesh) -> Poly3DCollection:
+        lt, dk = RandomProjection.__generate_random_brightness_parameters()
+        azimuth = float(np.random.rand())
+        altitude = float(np.random.rand())
 
         poly_mesh = mplot3d.art3d.Poly3DCollection(mesh.vectors)
 
-        ls = LightSource(azdeg=self.__azimuth, altdeg=self.__altitude)
+        ls = LightSource(azimuth, altitude)
         sns = ls.shade_normals(mesh.get_unit_normals(), fraction=1.0)
-        rgba = np.array([shade(s) for s in sns])
+        rgba = np.array([(lt - dk) * s + dk for s in sns])
 
         poly_mesh.set_facecolor(rgba)
 
@@ -76,3 +62,8 @@ class RandomProjection(object):
         plt.close(figure)
 
         return np_img
+
+    @staticmethod
+    def __generate_random_brightness_parameters() -> Tuple[np.ndarray, np.ndarray]:
+        # TODO: Implement
+        pass

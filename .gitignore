@@ -272,6 +272,7 @@ docs/pages/versions/*/react-native/*.diff
 outputs
 backgrounds
 drivers
-dataset
 .idea
-src/transforms/_automatic.py
+
+dataset
+test_dataset
