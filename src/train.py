@@ -7,7 +7,7 @@ from omegaconf import DictConfig
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from torchvision import models
-from torchvision.transforms import Compose, ToTensor, Normalize
+from torchvision.transforms import Compose, ToTensor, Normalize, Resize
 
 from datasets.Piece3DPrintDataset import Piece3DPrintDataset
 from transforms.random_background import RandomBackground
@@ -43,6 +43,7 @@ def main(cfg: DictConfig) -> None:
         RandomNoise(),
 
         # Convert the image as a Tensor Normalize to [-1, 1] range to input it to the NN model.
+        Resize(size=(cfg.img_size.w, cfg.img_size.h)),
         ToTensor(),
         Normalize(mean=cfg.normalization.mean, std=cfg.normalization.std)
     ]))
@@ -127,8 +128,8 @@ def main(cfg: DictConfig) -> None:
                 print(f'\t[E] Loss: {mean_test_loss}')
                 print(f'\t[E] Accuracy: {correct_test}/{len(eval_dataset)} ({correct_test / len(eval_dataset)})')
 
-            if mean_loss < best_checkpoint_loss:
-                best_checkpoint_loss = mean_loss
+            if mean_test_loss < best_checkpoint_loss:
+                best_checkpoint_loss = mean_test_loss
                 torch.save(model.state_dict(), 'best_checkpoint.pt')
 
             model.train()
