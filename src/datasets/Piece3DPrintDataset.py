@@ -15,7 +15,7 @@ class Piece3DPrintDataset(Dataset):
         self.__data = self.__make_dataset()
 
         self.class_from_idx = {
-            idx: class_name.split(os.path.sep)[-1][:-len('.stl')]
+            idx: Piece3DPrintDataset.__get_class_name_from_path(class_name)
             for idx, class_name in enumerate(self.__data)
         }
 
@@ -29,9 +29,13 @@ class Piece3DPrintDataset(Dataset):
         stl_mesh = mesh.Mesh.from_file(class_name)
 
         x = self.__transform(stl_mesh)
-        y = self.__idx_from_class[class_name]
+        y = self.__idx_from_class[Piece3DPrintDataset.__get_class_name_from_path(class_name)]
 
         return x, y
 
     def __make_dataset(self) -> List[str]:
         return sorted(glob(os.path.join(self.__root, '*.stl')))
+
+    @staticmethod
+    def __get_class_name_from_path(path: str):
+        return path.split(os.path.sep)[-1][:-len('.stl')]

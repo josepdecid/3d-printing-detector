@@ -19,3 +19,7 @@ backgrounds:
   images_per_term: 2
   search_terms:
     - office
+
+img_size:
+  w: 400
+  h: 300

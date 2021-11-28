@@ -14,7 +14,7 @@ from datasets.Piece3DPrintDataset import Piece3DPrintDataset
 from src.utils import get_cnn_model
 from transforms.random_background import RandomBackground
 from transforms.random_noise import RandomNoise
-from transforms.random_offset_scaling import RandomOffsetScaling
+from transforms.random_offset_scaling import RandomOffsetScalingAndPadding
 from transforms.random_projection import RandomProjection
 
 
@@ -32,7 +32,10 @@ def main(cfg: DictConfig) -> None:
         ),
 
         # Apply random transformations to the image to scale, crop and offset.
-        RandomOffsetScaling(),
+        RandomOffsetScalingAndPadding(target_size=(
+            cfg.img_size.w,
+            cfg.img_size.h
+        )),
 
         # Add a randomized background with different cropping sizes.
         RandomBackground(
@@ -49,6 +52,13 @@ def main(cfg: DictConfig) -> None:
         Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ]))
 
+    dataloader = DataLoader(dataset, 1)
+
+    for img, label in dataloader:
+        plt.imshow(img[0, :, :, :].permute(1, 2, 0).numpy())
+        plt.show()
+
+    """
     dataloader = DataLoader(dataset, 1)
     cnn_model, input_size = get_cnn_model()
     phase = 'train'
@@ -146,6 +156,7 @@ def main(cfg: DictConfig) -> None:
     # load best model weights
     cnn_model.load_state_dict(best_model_wts)
     return cnn_model, val_acc_history
+    """
 
 
 if __name__ == '__main__':
