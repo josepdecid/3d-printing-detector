@@ -22,7 +22,7 @@ def main(cfg: DictConfig) -> None:
     load_dotenv()
     set_seeds(cfg.seed)
 
-    dataset = Piece3DPrintDataset(os.environ.get('DATASET_PATH'), Compose([
+    training_dataset = Piece3DPrintDataset(os.environ.get('DATASET_PATH'), Compose([
         # Project 3D model into a random-oriented 2D image.
         RandomProjection(),
 
@@ -46,7 +46,14 @@ def main(cfg: DictConfig) -> None:
         ToTensor(),
         Normalize(mean=cfg.normalization.mean, std=cfg.normalization.std)
     ]))
-    dataloader = DataLoader(dataset, batch_size=cfg.batch_size, shuffle=True)
+
+    eval_dataset = Piece3DPrintDataset(os.environ.get('EVAL_DATASET_PATH'), Compose([
+        ToTensor(),
+        Normalize(mean=cfg.normalization.mean, std=cfg.normalization.std)
+    ]), eval_mode=True)
+
+    training_loader = DataLoader(training_dataset, batch_size=cfg.batch_size, shuffle=True)
+    eval_loader = DataLoader(eval_dataset, batch_size=cfg.batch_size, shuffle=False)
 
     device = torch.device('cuda' if torch.cuda.is_available() and cfg.use_gpu else 'cpu')
     model = models.resnet18(pretrained=True)
@@ -78,7 +85,7 @@ def main(cfg: DictConfig) -> None:
         correct = 0
         loss_values = []
 
-        for batch_idx, (images, labels) in enumerate(dataloader):
+        for images, labels in training_loader:
             images = images.to(device)
             labels = labels.to(device)
 
@@ -95,12 +102,36 @@ def main(cfg: DictConfig) -> None:
             loss_values.append(float(loss.item()))
 
         mean_loss = sum(loss_values) / len(loss_values)
-        print(f'\tLoss: {mean_loss}')
-        print(f'\tAccuracy: {correct}/{len(dataset)} ({correct / len(dataset)})')
+        print(f'\t[T] Loss: {mean_loss}')
+        print(f'\t[T] Accuracy: {correct}/{len(training_dataset)} ({correct / len(training_dataset)})')
 
-        if mean_loss < best_checkpoint_loss:
-            best_checkpoint_loss = mean_loss
-            torch.save(model.state_dict(), 'best_checkpoint.pt')
+        if epoch % cfg.epochs_to_eval == 0:
+            model.eval()
+
+            correct_test = 0
+            loss_test_values = []
+
+            with torch.no_grad():
+                for images, labels in eval_loader:
+                    images = images.to(device)
+                    labels = labels.to(device)
+
+                    logits = model(images)
+                    loss = criterion(logits, labels)
+
+                    predicted_labels = torch.argmax(torch.softmax(logits, dim=1), dim=1)
+                    correct_test += (labels == predicted_labels).sum()
+                    loss_test_values.append(float(loss.item()))
+
+                mean_test_loss = sum(loss_test_values) / len(loss_test_values)
+                print(f'\t[E] Loss: {mean_test_loss}')
+                print(f'\t[E] Accuracy: {correct_test}/{len(eval_dataset)} ({correct_test / len(eval_dataset)})')
+
+            if mean_loss < best_checkpoint_loss:
+                best_checkpoint_loss = mean_loss
+                torch.save(model.state_dict(), 'best_checkpoint.pt')
+
+            model.train()
 
 
 if __name__ == '__main__':
