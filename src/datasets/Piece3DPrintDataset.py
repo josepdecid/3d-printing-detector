@@ -14,8 +14,12 @@ class Piece3DPrintDataset(Dataset):
 
         self.__data = self.__make_dataset()
 
-        self.class_from_idx = {idx: class_name for idx, class_name in enumerate(self.__data)}
-        self.__idx_from_class = {class_name: idx for idx, class_name in enumerate(self.__data)}
+        self.class_from_idx = {
+            idx: class_name.split(os.path.sep)[-1][:-len('.stl')]
+            for idx, class_name in enumerate(self.__data)
+        }
+
+        self.__idx_from_class = {class_name: idx for idx, class_name in self.class_from_idx.items()}
 
     def __len__(self):
         return len(self.__data)
