@@ -52,15 +52,26 @@ def main(cfg: DictConfig) -> None:
 
     device = torch.device('gpu' if torch.cuda.is_available() and cfg.use_gpu else 'cpu')
     model = models.resnet18(pretrained=True)
+    print(f'Using pre-trained {model.__class__.__name__} from ImageNet.')
 
     # Apply transfer learning
-    for param in model.parameters():
-        param.requires_grad = False
+    ct = 0
+    for child in model.children():
+        ct += 1
+        if ct <= cfg.layers_to_freeze:
+            for param in child.parameters():
+                param.requires_grad = False
+        else:
+            print(f'\t > Layers from {ct} onwards will be fine-tuned.')
+            break
+
+    # Replace last layer with a #classes linear layer
     model.fc = nn.Linear(512, cfg.num_classes)
+    print(f'\t > Substituting the FC layer with a new one with {cfg.num_classes} neurons.\n')
 
     model = model.to(device)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
 
     for epoch in range(1, 101):
         print(f'Epoch {epoch}')
@@ -76,7 +87,8 @@ def main(cfg: DictConfig) -> None:
             optimizer.step()
             optimizer.zero_grad()
 
-            correct += (labels == torch.argmax(logits)).sum()
+            predicted_labels = torch.argmax(torch.softmax(logits, dim=1), dim=1)
+            correct += (labels == predicted_labels).sum()
             loss_values.append(float(loss.item()))
 
         print(f'\tAccuracy: {correct}/{len(dataset)} ({correct / len(dataset)})')
