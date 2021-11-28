@@ -53,7 +53,7 @@ class RandomBackground(object):
             r_component = np.ones(img.shape[:2]) * np.random.randint(0, 255)
             g_component = np.ones(img.shape[:2]) * np.random.randint(0, 255)
             b_component = np.ones(img.shape[:2]) * np.random.randint(0, 255)
-            random_bg = np.stack([r_component, g_component, b_component], axis=2)
+            random_bg = np.stack([r_component, g_component, b_component], axis=2).astype(np.uint8)
 
         # Crop the background randomly
         cropping_percentage = np.random.uniform(low=self.__min_cropping_percentage, high=1.0)

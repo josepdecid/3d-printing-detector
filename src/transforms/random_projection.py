@@ -8,6 +8,8 @@ from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from stl.mesh import Mesh
 
+from transforms._automatic import generate_random_brightness
+
 RGBA = Tuple[float, float, float, float]
 
 
@@ -25,23 +27,24 @@ class RandomProjection(object):
             azimuth: int, altitude: int,
             darkest_shadow_surface: RGBA, brightest_lit_surface: RGBA
     ):
-        self.__azimuth = azimuth
-        self.__altitude = altitude
-
         self.__dk = np.array(darkest_shadow_surface)
         self.__lt = np.array(brightest_lit_surface)
 
-    def __call__(self, mesh: Mesh) -> np.ndarray:
+    def __call__(self, mesh: Mesh, class_name: str) -> np.ndarray:
         random_rotation_vectors = 2 * (np.random.rand(3) - 0.5)
         random_rotation_angle = float(np.radians(360 * np.random.rand()))
         mesh.rotate(random_rotation_vectors, random_rotation_angle)
 
-        poly_mesh = self.__create_illumination(mesh)
+        poly_mesh = self.__create_illumination(mesh, class_name)
         array_img = RandomProjection.__plot_to_array_data(mesh, poly_mesh)
 
         return array_img
 
-    def __create_illumination(self, mesh: Mesh) -> Poly3DCollection:
+    def __create_illumination(self, mesh: Mesh, class_name: str) -> Poly3DCollection:
+        self.__lt, self.__dk = generate_random_brightness(class_name)
+        self.__azimuth = np.random.rand()
+        self.__altitude = np.random.rand()
+
         def shade(s):
             return (self.__lt - self.__dk) * s + self.__dk
 

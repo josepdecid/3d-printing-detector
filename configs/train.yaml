@@ -1,19 +1,5 @@
 # Training configuration
 
-illumination:
-  azimuth: 225
-  altitude: 45
-  darkest_shadow_surface:
-    - 0.2
-    - 0.0
-    - 0.0
-    - 1.0
-  brightest_lit_surface:
-    - 0.7
-    - 0.7
-    - 1.0
-    - 1.0
-
 backgrounds:
   download: False
   images_per_term: 2
@@ -23,3 +9,17 @@ backgrounds:
 img_size:
   w: 400
   h: 300
+
+normalization:
+  mean:
+    - 0.485
+    - 0.456
+    - 0.406
+  std:
+    - 0.229
+    - 0.224
+    - 0.225
+
+num_classes: 8
+batch_size: 8
+use_gpu: True

@@ -6,6 +6,8 @@ import torch
 from stl import mesh
 from torch.utils.data import Dataset
 
+from transforms.random_projection import RandomProjection
+
 
 class Piece3DPrintDataset(Dataset):
     def __init__(self, root_path: str, transform: Callable):
@@ -25,11 +27,19 @@ class Piece3DPrintDataset(Dataset):
         return len(self.__data)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, dict]:
-        class_name = self.__data[idx]
-        stl_mesh = mesh.Mesh.from_file(class_name)
+        class_path = self.__data[idx]
+        class_name = Piece3DPrintDataset.__get_class_name_from_path(class_path)
 
+        stl_mesh = mesh.Mesh.from_file(class_path)
+
+        stl_mesh = RandomProjection(
+            azimuth=1,
+            altitude=1,
+            darkest_shadow_surface=[0.2, 0.0, 0.0, 1.0],
+            brightest_lit_surface=[],
+        )(stl_mesh, class_name)
         x = self.__transform(stl_mesh)
-        y = self.__idx_from_class[Piece3DPrintDataset.__get_class_name_from_path(class_name)]
+        y = self.__idx_from_class[class_name]
 
         return x, y
 
