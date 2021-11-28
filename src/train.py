@@ -13,11 +13,13 @@ from datasets.Piece3DPrintDataset import Piece3DPrintDataset
 from transforms.random_background import RandomBackground
 from transforms.random_noise import RandomNoise
 from transforms.random_offset_scaling import RandomOffsetScalingAndPadding
+from utils import set_seeds
 
 
 @hydra.main(config_path=os.path.join('..', 'configs'), config_name='train')
 def main(cfg: DictConfig) -> None:
     load_dotenv()
+    set_seeds(cfg.seed)
 
     dataset = Piece3DPrintDataset(os.environ.get('DATASET_PATH'), Compose([
         # Project 3D model into a random-oriented 2D image.
@@ -73,6 +75,8 @@ def main(cfg: DictConfig) -> None:
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.01)
 
+    best_checkpoint_loss = torch.inf
+
     for epoch in range(1, 101):
         print(f'Epoch {epoch}')
         correct = 0
@@ -94,8 +98,13 @@ def main(cfg: DictConfig) -> None:
             correct += (labels == predicted_labels).sum()
             loss_values.append(float(loss.item()))
 
+        mean_loss = sum(loss_values) / len(loss_values)
+        print(f'\tLoss: {mean_loss}')
         print(f'\tAccuracy: {correct}/{len(dataset)} ({correct / len(dataset)})')
-        print(f'\tLoss: {sum(loss_values) / len(loss_values)}')
+
+        if mean_loss < best_checkpoint_loss:
+            best_checkpoint_loss = mean_loss
+            torch.save(model.state_dict(), 'best_checkpoint.pt')
 
 
 if __name__ == '__main__':
